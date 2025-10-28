@@ -25,7 +25,7 @@ export default function Home() {
             <span className="font-bold text-blue-700 mb-1">Miška</span>
             <span className="text-blue-700 text-sm text-center">Nauči se klikati, premikati in uporabljati kolešček.</span>
           </a>
-          <a href="/keyboard" className="flex-1 flex flex-col items-center bg-yellow-50 rounded-2xl p-4 shadow hover:scale-105 transition">
+          <a href="/keyboard/learn" className="flex-1 flex flex-col items-center bg-yellow-50 rounded-2xl p-4 shadow hover:scale-105 transition">
             <FaKeyboard className="text-4xl text-yellow-400 mb-2" />
             <span className="font-bold text-yellow-700 mb-1">Tipkovnica</span>
             <span className="text-yellow-700 text-sm text-center">Spoznaj črke, številke in posebne tipke.</span>
