@@ -1,6 +1,5 @@
 "use client";
 
-import { url } from "inspector";
 import { useState, useEffect } from "react";
 
 const SHEEP_COUNT = 10;
@@ -47,6 +46,15 @@ export default function ClickSheeps() {
     });
   };
 
+  const handleRightClick = (e: React.MouseEvent, i: number) => {
+    e.preventDefault();
+    setClicked(prev => {
+      const updated = [...prev];
+      updated[i] = false;
+      return updated;
+    });
+  };
+
   return (
     <div>
       <p>(Klikni vse ovčke!)</p>
@@ -67,6 +75,7 @@ export default function ClickSheeps() {
             key={i}
             id={`sheep-button-${i}`}
             onClick={() => handleClick(i)}
+            onContextMenu={e => handleRightClick(e, i)}
             style={{
               position: "absolute",
               left: pos.left,
