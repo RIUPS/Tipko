@@ -1,0 +1,211 @@
+[
+  {
+    "title": "Spoznaj miško",
+    "category": "miška",
+    "difficulty": "začetnik",
+    "description": "Nauči se uporabljati levi klik na miški",
+    "instructions": [
+      "Klikni na vse zvezdice na zaslonu",
+      "Poskusi biti čim hitrejši",
+      "Zberi vsaj 80% točk za napredovanje"
+    ],
+    "content": {
+      "type": "click-stars",
+      "targetCount": 10,
+      "timeLimit": 30,
+      "starPositions": "random"
+    },
+    "points": 10,
+    "order": 1
+  },
+  {
+    "title": "Povleci in spusti",
+    "category": "miška",
+    "difficulty": "začetnik",
+    "description": "Vaja za vlečenje predmetov",
+    "instructions": [
+      "Povleci vse predmete v pravo škatlo",
+      "Ujemanje mora biti pravilno",
+      "Naredi manj kot 3 napake"
+    ],
+    "content": {
+      "type": "drag-drop",
+      "items": [
+        {"id": 1, "name": "jabolko", "category": "sadje"},
+        {"id": 2, "name": "banana", "category": "sadje"},
+        {"id": 3, "name": "korenček", "category": "zelenjava"}
+      ],
+      "targets": ["sadje", "zelenjava"]
+    },
+    "points": 15,
+    "order": 2
+  },
+  {
+    "title": "Pritisni pravo črko",
+    "category": "tipkovnica",
+    "difficulty": "začetnik",
+    "description": "Nauči se prepoznati črke na tipkovnici",
+    "instructions": [
+      "Na zaslonu se bo pokazala črka",
+      "Pritisni isto črko na tipkovnici",
+      "Bodi hiter in natančen!"
+    ],
+    "content": {
+      "type": "key-press",
+      "letters": ["A", "B", "C", "D", "E", "F", "G", "H"],
+      "rounds": 8,
+      "timePerRound": 5
+    },
+    "points": 10,
+    "order": 3
+  },
+  {
+    "title": "Hitrostno tipkanje",
+    "category": "tipkovnica",
+    "difficulty": "srednji",
+    "description": "Natipkaj besede čim hitreje",
+    "instructions": [
+      "Natipkaj prikazano besedo",
+      "Poskusi brez napak",
+      "Vsaka napaka odšteje točke"
+    ],
+    "content": {
+      "type": "typing-speed",
+      "words": ["miška", "tipkovnica", "zaslon", "računalnik", "igra"],
+      "minSpeed": 20
+    },
+    "points": 20,
+    "order": 4
+  },
+  {
+    "title": "Kopiraj in prilepi",
+    "category": "bližnjice",
+    "difficulty": "začetnik",
+    "description": "Nauči se uporabljati Ctrl+C in Ctrl+V",
+    "instructions": [
+      "Izberi besedilo z miško",
+      "Pritisni Ctrl+C za kopiranje",
+      "Klikni v drugo polje in pritisni Ctrl+V"
+    ],
+    "content": {
+      "type": "shortcut-practice",
+      "shortcuts": ["Ctrl+C", "Ctrl+V"],
+      "task": "copy-paste-text"
+    },
+    "points": 15,
+    "order": 5
+  },
+  {
+    "title": "Shrani dokument",
+    "category": "bližnjice",
+    "difficulty": "začetnik",
+    "description": "Nauči se shranjevati s Ctrl+S",
+    "instructions": [
+      "Napiši nekaj besedila",
+      "Pritisni Ctrl+S za shranjevanje",
+      "Pojavi se naj potrditev"
+    ],
+    "content": {
+      "type": "shortcut-practice",
+      "shortcuts": ["Ctrl+S"],
+      "task": "save-document"
+    },
+    "points": 10,
+    "order": 6
+  },
+  {
+    "title": "Kaj je varno geslo?",
+    "category": "splet",
+    "difficulty": "začetnik",
+    "description": "Spoznaj lastnosti varnega gesla",
+    "instructions": [
+      "Preberi si lastnosti varnega gesla",
+      "Izberi gesla, ki so varna",
+      "Zavrni gesla, ki niso varna"
+    ],
+    "content": {
+      "type": "quiz",
+      "questions": [
+        {
+          "question": "Katero geslo je varno?",
+          "options": ["123456", "M0j3Ge$l0!", "geslo", "abcdef"],
+          "correctAnswer": 1
+        },
+        {
+          "question": "Ali lahko deliš geslo s prijatelji?",
+          "options": ["Da, če so mi všeč", "Ne, nikoli", "Samo z najboljšim prijateljem"],
+          "correctAnswer": 1
+        }
+      ]
+    },
+    "points": 15,
+    "order": 7
+  },
+  {
+    "title": "Prepoznaj nevarno stran",
+    "category": "splet",
+    "difficulty": "srednji",
+    "description": "Nauči se prepoznati sumljive spletne strani",
+    "instructions": [
+      "Poglej si spletno stran",
+      "Ali je stran varna ali nevarna?",
+      "Pazi na sumljive elemente!"
+    ],
+    "content": {
+      "type": "safety-quiz",
+      "scenarios": [
+        {
+          "description": "Stran te prosi za geslo tvoje e-pošte",
+          "isSafe": false,
+          "explanation": "Zaupne strani nikoli ne prosijo za gesla"
+        },
+        {
+          "description": "Stran ima HTTPS in ključavnico",
+          "isSafe": true,
+          "explanation": "HTTPS pomeni varno povezavo"
+        }
+      ]
+    },
+    "points": 20,
+    "order": 8
+  },
+  {
+    "title": "Lovi zvezdice",
+    "category": "mini-igre",
+    "difficulty": "začetnik",
+    "description": "Klikni čim več zvezd v 30 sekundah",
+    "instructions": [
+      "Klikni na zvezdice, ki se pojavljajo",
+      "Vsak klik prinese točke",
+      "Poskusi zbrati čim več!"
+    ],
+    "content": {
+      "type": "click-game",
+      "duration": 30,
+      "targetCount": 20
+    },
+    "points": 25,
+    "order": 9
+  },
+  {
+    "title": "Sestavi računalnik",
+    "category": "mini-igre",
+    "difficulty": "srednji",
+    "description": "Povleci dele računalnika na prava mesta",
+    "instructions": [
+      "Videl boš dele računalnika",
+      "Povleci vsak del na pravo mesto",
+      "Monitor gre na vrh, miška desno..."
+    ],
+    "content": {
+      "type": "drag-puzzle",
+      "parts": [
+        {"name": "monitor", "correctPosition": "top"},
+        {"name": "tipkovnica", "correctPosition": "center"},
+        {"name": "miška", "correctPosition": "right"}
+      ]
+    },
+    "points": 30,
+    "order": 10
+  }
+]
