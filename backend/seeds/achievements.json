@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Prvi koraki",
+    "description": "Dokončaj prvo lekcijo",
+    "icon": "🥇",
+    "condition": { "type": "lessons", "value": 1 },
+    "rarity": "common"
+  },
+  {
+    "name": "100 točk",
+    "description": "Zberi 100 točk v vseh vajah",
+    "icon": "⭐",
+    "condition": { "type": "points", "value": 100 },
+    "rarity": "rare"
+  },
+  {
+    "name": "7-dnevni niz",
+    "description": "Igraj 7 dni zaporedoma",
+    "icon": "🔥",
+    "condition": { "type": "streak", "value": 7 },
+    "rarity": "epic"
+  },
+  {
+    "name": "Tipkovni začetnik",
+    "description": "Dokončaj 3 lekcije iz kategorije tipkovnica",
+    "icon": "⌨️",
+    "condition": { "type": "category", "value": 3, "category": "tipkovnica" },
+    "rarity": "common"
+  }
+]
