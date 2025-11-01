@@ -46,7 +46,7 @@ export default function Home() {
             </span>
           </a>
           <a
-            href="/security"
+            href="/digital-safety"
             className="flex-1 flex flex-col items-center bg-green-50 rounded-2xl p-4 shadow hover:scale-105 transition"
           >
             <FaShieldAlt className="text-4xl text-green-400 mb-2" />

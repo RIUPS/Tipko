@@ -1,5 +1,5 @@
 import React from "react";
-import { FaMouse, FaKeyboard, FaHome } from "react-icons/fa";
+import { FaMouse, FaKeyboard, FaHome, FaShieldAlt } from "react-icons/fa";
 
 const Navbar: React.FC = () => {
   return (
@@ -29,6 +29,15 @@ const Navbar: React.FC = () => {
           >
             <FaKeyboard className="text-lg" />
             Tipkovnica
+          </a>
+        </li>
+        <li>
+          <a
+            href="/digital-safety"
+            className="flex items-center gap-2 text-blue-600 font-semibold hover:bg-blue-100 px-4 py-2 rounded-xl transition"
+          >
+            <FaShieldAlt className="text-lg" />
+            Spletna varnost
           </a>
         </li>
       </ul>
