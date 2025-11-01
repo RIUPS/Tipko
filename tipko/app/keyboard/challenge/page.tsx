@@ -1,5 +1,6 @@
 "use client";
 
+import { ChartDataPoint, ErrorType, QuoteLengthType } from "@/types";
 import React, { useState, useEffect, useRef } from "react";
 import {
   LineChart,
@@ -12,38 +13,24 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-type QuoteLengthType = "short" | "medium" | "long";
-
-interface ErrorType {
-  index: number;
-  expected: string;
-  typed: string;
-}
-
-interface ChartDataPoint {
-  time: number;
-  wpm: number;
-  accuracy: number;
-}
-
 const QUOTES: Record<QuoteLengthType, string[]> = {
   short: [
-    "The quick brown fox jumps over the lazy dog.",
-    "Time flies like an arrow.",
-    "Practice makes perfect.",
-    "Actions speak louder than words.",
-    "Knowledge is power.",
+    "Vaja dela mojstra.",
+    "Čas beži kot puščica.",
+    "Znanje je moč.",
+    "Delo krepi človeka.",
+    "Po dežju posije sonce.",
   ],
   medium: [
-    "The only way to do great work is to love what you do. If you haven't found it yet, keep looking.",
-    "In the middle of difficulty lies opportunity. Every challenge is a chance to grow stronger.",
-    "Success is not final, failure is not fatal: it is the courage to continue that counts.",
-    "The future belongs to those who believe in the beauty of their dreams and work towards them.",
+    "Uspeh ni končen in neuspeh ni usoden; šteje pogum, da nadaljuješ.",
+    "Vsaka težava skriva priložnost, da postaneš močnejši in modrejši.",
+    "Sanje se ne uresničijo same od sebe, uresničijo se, ko vztrajaš.",
+    "Največje zmage se rodijo iz največjih preizkušenj.",
   ],
   long: [
-    "It is not the critic who counts; not the man who points out how the strong man stumbles, or where the doer of deeds could have done them better. The credit belongs to the man who is actually in the arena, whose face is marred by dust and sweat and blood.",
-    "Two roads diverged in a wood, and I took the one less traveled by, and that has made all the difference. The choices we make define who we become and shape our destiny in ways we cannot always predict.",
-    "The greatest glory in living lies not in never falling, but in rising every time we fall. Life is a series of challenges and triumphs, and our character is defined by how we respond to adversity.",
+    "Ni pomembno, kolikokrat padeš, ampak kolikokrat vstaneš. Življenje ni vedno lahko, a vsak padec te nauči nekaj novega o sebi in svetu okoli tebe.",
+    "Pravi pogum ni odsotnost strahu, temveč odločitev, da kljub strahu nadaljuješ naprej. Ko slediš srcu, te pot vedno pripelje tja, kjer moraš biti.",
+    "Sreča ni cilj, ampak način življenja. Najdeš jo v drobnih trenutkih, v toplih nasmehih in v hvaležnosti za to, kar že imaš.",
   ],
 };
 
@@ -91,7 +78,6 @@ export default function Page() {
 
   const calculateStats = () => {
     if (!startTime || !endTime) return null;
-
     const timeInSeconds = (endTime - startTime) / 1000;
     const timeInMinutes = timeInSeconds / 60;
     const words = currentQuote.split(" ").length;
@@ -108,17 +94,11 @@ export default function Page() {
 
   const updateChartData = (currentInput: string) => {
     if (!startTime) return;
-
     const currentTime = Date.now();
     const timeInSeconds = (currentTime - startTime) / 1000;
     const timeInMinutes = timeInSeconds / 60;
-
-    const wordsTyped = currentInput
-      .trim()
-      .split(" ")
-      .filter((w: string) => w).length;
+    const wordsTyped = currentInput.trim().split(" ").filter(Boolean).length;
     const wpm = timeInMinutes > 0 ? Math.round(wordsTyped / timeInMinutes) : 0;
-
     const currentErrors = errors.length;
     const accuracy =
       currentInput.length > 0
@@ -129,65 +109,40 @@ export default function Page() {
 
     setChartData((prev) => [
       ...prev,
-      {
-        time: Math.round(timeInSeconds),
-        wpm: wpm,
-        accuracy: accuracy,
-      },
+      { time: Math.round(timeInSeconds), wpm, accuracy },
     ]);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value;
-
-    // Start timer on first correct keystroke
     if (!startTime && input.length === 1 && input[0] === currentQuote[0]) {
       setStartTime(Date.now());
     }
 
-    // If timer hasn't started yet (first char was wrong), don't process
-    if (!startTime && input.length > 0) {
-      if (stopOnError) {
-        return; // Don't allow any input until first correct char
-      }
-    }
-
-    // Stop on error mode - prevent typing if current character is wrong
     if (stopOnError && input.length > 0) {
       const lastChar = input[input.length - 1];
       const expectedChar = currentQuote[input.length - 1];
-
-      if (lastChar !== expectedChar) {
-        return; // Don't update input
-      }
+      if (lastChar !== expectedChar) return;
     }
 
-    // Track errors
     if (input.length > userInput.length) {
-      const newCharIndex = input.length - 1;
-      if (input[newCharIndex] !== currentQuote[newCharIndex]) {
+      const i = input.length - 1;
+      if (input[i] !== currentQuote[i]) {
         setErrors((prev) => [
           ...prev,
-          {
-            index: newCharIndex,
-            expected: currentQuote[newCharIndex],
-            typed: input[newCharIndex],
-          },
+          { index: i, expected: currentQuote[i], typed: input[i] },
         ]);
       }
     }
 
     setUserInput(input);
 
-    // Update chart data every second
     if (
       startTime &&
       Math.floor((Date.now() - startTime) / 1000) > chartData.length
-    ) {
+    )
       updateChartData(input);
-    }
 
-    // Check if complete
     if (input.length === currentQuote.length && input === currentQuote) {
       setEndTime(Date.now());
       setIsComplete(true);
@@ -197,35 +152,37 @@ export default function Page() {
 
   const getCharClass = (index: number) => {
     if (index >= userInput.length) return "text-gray-400";
-    if (userInput[index] === currentQuote[index]) return "text-green-500";
-    return "text-red-500 bg-red-100";
+    if (userInput[index] === currentQuote[index]) return "text-green-600";
+    return "text-pink-600 bg-pink-100";
   };
 
   const stats = calculateStats();
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold text-center mb-8 text-yellow-400">
-          Typing Speed Test
+    <div className="min-h-screen bg-gradient-to-br from-yellow-100 via-pink-50 to-blue-100 p-8">
+      <div className="max-w-4xl mx-auto bg-white/80 border-4 border-yellow-200 rounded-3xl shadow-xl p-8">
+        <h1 className="text-4xl sm:text-5xl font-extrabold text-center mb-8 text-yellow-600 drop-shadow">
+          Hitrost Tipkanja
         </h1>
 
         {!isComplete && (
           <>
             {/* Settings */}
-            <div className="mb-6 flex flex-wrap gap-4 justify-center items-center">
+            <div className="mb-6 flex flex-wrap gap-4 justify-center items-center bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-4 shadow-inner">
               <div className="flex items-center gap-2">
-                <label className="text-sm text-gray-300">Quote Length:</label>
+                <label className="text-blue-800 font-semibold">
+                  Dolžina besedila:
+                </label>
                 <select
                   value={quoteLength}
                   onChange={(e) =>
                     handleQuoteLengthChange(e.target.value as QuoteLengthType)
                   }
-                  className="bg-gray-800 border border-gray-700 rounded px-3 py-1 text-sm focus:outline-none focus:border-yellow-400"
+                  className="bg-white border-2 border-yellow-300 rounded-lg px-3 py-1 focus:outline-none focus:border-yellow-500 font-semibold text-yellow-800"
                 >
-                  <option value="short">Short</option>
-                  <option value="medium">Medium</option>
-                  <option value="long">Long</option>
+                  <option value="short">Kratko</option>
+                  <option value="medium">Srednje</option>
+                  <option value="long">Dolgo</option>
                 </select>
               </div>
 
@@ -235,17 +192,20 @@ export default function Page() {
                   id="stopOnError"
                   checked={stopOnError}
                   onChange={(e) => setStopOnError(e.target.checked)}
-                  className="w-4 h-4"
+                  className="w-5 h-5 accent-pink-400"
                 />
-                <label htmlFor="stopOnError" className="text-sm text-gray-300">
-                  Stop on error
+                <label
+                  htmlFor="stopOnError"
+                  className="text-pink-600 font-semibold"
+                >
+                  Ustavi ob napaki
                 </label>
               </div>
             </div>
 
             {/* Quote Display */}
-            <div className="bg-gray-800 rounded-lg p-8 mb-6 min-h-[200px] flex items-center">
-              <p className="text-2xl leading-relaxed font-mono">
+            <div className="bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-8 mb-6 min-h-[200px] flex items-center shadow-inner">
+              <p className="text-2xl leading-relaxed font-mono text-blue-900 text-center">
                 {currentQuote.split("").map((char, index) => (
                   <span key={index} className={getCharClass(index)}>
                     {char}
@@ -260,16 +220,16 @@ export default function Page() {
               type="text"
               value={userInput}
               onChange={handleInputChange}
-              className="w-full bg-gray-800 border-2 border-gray-700 rounded-lg p-4 text-xl font-mono focus:outline-none focus:border-yellow-400"
-              placeholder="Start typing..."
+              className="w-full bg-white border-2 border-yellow-300 rounded-xl p-4 text-xl font-mono text-blue-900 focus:outline-none focus:border-yellow-500 shadow"
+              placeholder="Začni tipkati..."
               disabled={isComplete}
               autoFocus
             />
 
             {/* Timer */}
             {startTime && !endTime && (
-              <div className="text-center mt-4 text-gray-400">
-                Time: {((Date.now() - startTime) / 1000).toFixed(1)}s
+              <div className="text-center mt-4 text-yellow-700 font-semibold">
+                ⏱ Čas: {((Date.now() - startTime) / 1000).toFixed(1)} s
               </div>
             )}
           </>
@@ -278,78 +238,88 @@ export default function Page() {
         {/* Results */}
         {isComplete && stats && (
           <div className="space-y-6">
-            <div className="bg-gray-800 rounded-lg p-8">
-              <h2 className="text-3xl font-bold text-center mb-6 text-yellow-400">
-                Results
+            <div className="bg-yellow-50 border-2 border-yellow-200 rounded-3xl p-8 shadow-inner">
+              <h2 className="text-3xl font-bold text-center mb-6 text-yellow-600">
+                Rezultati
               </h2>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div className="bg-gray-700 rounded p-4 text-center">
-                  <div className="text-3xl font-bold text-green-400">
+                <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
+                  <div className="text-3xl font-bold text-green-600">
                     {stats.wpm}
                   </div>
-                  <div className="text-sm text-gray-300">WPM</div>
+                  <div className="text-sm text-green-700 font-semibold">
+                    WPM
+                  </div>
                 </div>
-                <div className="bg-gray-700 rounded p-4 text-center">
-                  <div className="text-3xl font-bold text-blue-400">
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center">
+                  <div className="text-3xl font-bold text-blue-600">
                     {stats.cpm}
                   </div>
-                  <div className="text-sm text-gray-300">CPM</div>
+                  <div className="text-sm text-blue-700 font-semibold">CPM</div>
                 </div>
-                <div className="bg-gray-700 rounded p-4 text-center">
-                  <div className="text-3xl font-bold text-yellow-400">
+                <div className="bg-yellow-50 border border-yellow-300 rounded-xl p-4 text-center">
+                  <div className="text-3xl font-bold text-yellow-600">
                     {stats.accuracy}%
                   </div>
-                  <div className="text-sm text-gray-300">Accuracy</div>
+                  <div className="text-sm text-yellow-700 font-semibold">
+                    Natančnost
+                  </div>
                 </div>
-                <div className="bg-gray-700 rounded p-4 text-center">
-                  <div className="text-3xl font-bold text-purple-400">
+                <div className="bg-pink-50 border border-pink-200 rounded-xl p-4 text-center">
+                  <div className="text-3xl font-bold text-pink-600">
                     {errors.length}
                   </div>
-                  <div className="text-sm text-gray-300">Errors</div>
+                  <div className="text-sm text-pink-700 font-semibold">
+                    Napake
+                  </div>
                 </div>
               </div>
 
               {/* Chart */}
-              <div className="bg-gray-700 rounded p-4 mb-6">
-                <h3 className="text-xl font-semibold mb-4 text-center">
-                  Progress Over Time
+              <div className="bg-white border border-yellow-200 rounded-2xl p-4 mb-6">
+                <h3 className="text-xl font-bold mb-4 text-center text-yellow-700">
+                  Napredek skozi čas
                 </h3>
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="#facc15"
+                      opacity={0.3}
+                    />
                     <XAxis
                       dataKey="time"
-                      stroke="#9CA3AF"
+                      stroke="#78350f"
                       label={{
-                        value: "Time (seconds)",
+                        value: "Čas (s)",
                         position: "insideBottom",
                         offset: -5,
-                        fill: "#9CA3AF",
+                        fill: "#78350f",
                       }}
                     />
-                    <YAxis stroke="#9CA3AF" />
+                    <YAxis stroke="#78350f" />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "#1F2937",
-                        border: "1px solid #374151",
+                        backgroundColor: "#fff8dc",
+                        border: "1px solid #facc15",
                         borderRadius: "0.5rem",
                       }}
-                      labelStyle={{ color: "#F3F4F6" }}
+                      labelStyle={{ color: "#78350f" }}
                     />
                     <Legend />
                     <Line
                       type="monotone"
                       dataKey="wpm"
-                      stroke="#10B981"
+                      stroke="#22c55e"
                       name="WPM"
                       strokeWidth={2}
                     />
                     <Line
                       type="monotone"
                       dataKey="accuracy"
-                      stroke="#F59E0B"
-                      name="Accuracy %"
+                      stroke="#f59e0b"
+                      name="Natančnost %"
                       strokeWidth={2}
                     />
                   </LineChart>
@@ -358,17 +328,22 @@ export default function Page() {
 
               {/* Error Details */}
               {errors.length > 0 && (
-                <div className="bg-gray-700 rounded p-4 mb-6">
-                  <h3 className="text-xl font-semibold mb-3">
-                    Errors Made: {errors.length}
+                <div className="bg-pink-50 border border-pink-200 rounded-xl p-4 mb-6">
+                  <h3 className="text-xl font-bold mb-3 text-pink-600">
+                    Napake: {errors.length}
                   </h3>
-                  <div className="max-h-32 overflow-y-auto text-sm space-y-1">
+                  <div className="max-h-32 overflow-y-auto text-sm space-y-1 text-pink-800">
                     {errors.map((error, idx) => (
-                      <div key={idx} className="text-gray-300">
-                        Position {error.index + 1}: Expected '
-                        <span className="text-green-400">{error.expected}</span>
-                        ' but typed '
-                        <span className="text-red-400">{error.typed}</span>'
+                      <div key={idx}>
+                        Pozicija {error.index + 1}: pričakovano "
+                        <span className="font-bold text-green-600">
+                          {error.expected}
+                        </span>
+                        " – tipkano "
+                        <span className="font-bold text-pink-600">
+                          {error.typed}
+                        </span>
+                        "
                       </div>
                     ))}
                   </div>
@@ -377,9 +352,9 @@ export default function Page() {
 
               <button
                 onClick={loadNewQuote}
-                className="w-full bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-3 px-6 rounded-lg transition-colors"
+                className="w-full bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-bold py-3 px-6 rounded-full shadow-lg transition-transform hover:scale-105"
               >
-                New Quote
+                🔄 Nov citat
               </button>
             </div>
           </div>

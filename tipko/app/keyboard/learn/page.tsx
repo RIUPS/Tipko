@@ -1,14 +1,11 @@
 "use client";
+import CharacterDisplay from "@/app/components/character-display";
+import CharacterInput from "@/app/components/character-input";
+import { CharacterState } from "@/types";
 import { useState, useEffect, useRef } from "react";
 
 const KEYBOARD_CHARS = "abcčdefghijklmnoprsštuvzž";
 const KEYBOARD_NUMBERS = "1234567890";
-
-interface CharacterState {
-  id: string;
-  char: string;
-  status: "pending" | "correct" | "wrong";
-}
 
 const Page = () => {
   const [characters, setCharacters] = useState<CharacterState[]>([]);
@@ -21,7 +18,7 @@ const Page = () => {
     generateCharacters(characterCount);
   }, [characterCount, includeNumbers]);
 
-  const generateCharacters = (length: number = 5) => {
+  const generateCharacters = (length: number = characterCount) => {
     const newChars = Array.from({ length }, (_, i) => ({
       id: `${Date.now()}-${i}`,
       char: includeNumbers
@@ -77,132 +74,72 @@ const Page = () => {
   };
 
   return (
-    <main className="flex flex-col items-center justify-center h-full p-8 bg-gray-700 m-4 rounded-xl max-w-[80%] mx-auto">
-      <h1 className="text-3xl font-bold my-4">Učenje tipkanja</h1>
-      <p>Kliknite pravilno tipko prikazano spodaj</p>
+    <main className="flex flex-col items-center justify-center w-full max-w-2xl bg-white/80 border-4 border-yellow-200 rounded-3xl shadow-xl p-8 mx-auto mt-8 text-center">
+      <h1 className="text-4xl sm:text-5xl font-extrabold text-yellow-600 drop-shadow mb-4">
+        Učenje tipkanja
+      </h1>
+      <p className="text-lg sm:text-xl text-blue-900 font-semibold mb-6">
+        Klikni pravilno tipko, prikazano spodaj 👇
+      </p>
+
+      {/* Character Display */}
       <CharacterDisplay
         characters={characters}
         currentIndex={currentIndex}
         onClick={() => inputRef.current?.focus()}
       />
+
+      {/* Character Input */}
       <CharacterInput onKeyPress={handleKeyPress} inputRef={inputRef} />
-      <div className="flex">
-        <div className="flex items-center mt-4 mx-4">
+
+      {/* Settings and Controls */}
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6 bg-yellow-50 border-2 border-yellow-200 rounded-2xl px-6 py-4 shadow-inner w-full">
+        <div className="flex items-center">
           <input
             type="checkbox"
             id="includeNumbers"
-            className="mr-2"
+            className="mr-2 w-5 h-5 accent-yellow-500"
             checked={includeNumbers}
             onChange={(e) => setIncludeNumbers(e.target.checked)}
           />
-          <label htmlFor="includeNumbers">Vključi številke</label>
+          <label
+            htmlFor="includeNumbers"
+            className="font-semibold text-yellow-800"
+          >
+            Vključi številke
+          </label>
         </div>
-        <input
-          type="number"
-          min={1}
-          max={12}
-          value={characterCount}
-          onChange={(e) => setCharacterCount(Number(e.target.value))}
-          className="mt-4 p-2 rounded border border-gray-300 mr-4 w-20"
-          placeholder="Dolžina niza"
-        />
+
+        <div className="flex items-center gap-2">
+          <label
+            htmlFor="characterCount"
+            className="font-semibold text-yellow-800"
+          >
+            Dolžina niza:
+          </label>
+          <input
+            id="characterCount"
+            type="number"
+            min={1}
+            max={9}
+            value={characterCount}
+            onChange={(e) => setCharacterCount(Number(e.target.value))}
+            className="p-2 rounded-lg border-2 border-yellow-300 w-20 text-center text-yellow-700 font-bold focus:outline-none focus:border-yellow-500"
+          />
+        </div>
+
         <button
           onClick={() => generateCharacters(characterCount)}
-          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          className="bg-yellow-300 hover:bg-yellow-400 text-yellow-900 font-bold px-6 py-2 rounded-full shadow-lg border-2 border-yellow-400 transition-transform hover:scale-105"
         >
-          Novi znaki
+          🔄 Novi znaki
         </button>
       </div>
+
+      <div className="bg-blue-50 border-l-4 border-blue-300 p-4 rounded-lg mt-6 text-blue-800 font-semibold shadow">
+        💡 <strong>Nasvet:</strong> Vadba dela mojstra — poskusi brez napak!
+      </div>
     </main>
-  );
-};
-
-const CharacterDisplay = ({
-  characters,
-  currentIndex,
-  onClick,
-}: {
-  characters: CharacterState[];
-  currentIndex: number;
-  onClick: () => void;
-}) => {
-  return (
-    <div
-      className="flex flex-row justify-center gap-4 bg-gray-600 p-4 rounded m-4 min-h-20"
-      onClick={onClick}
-    >
-      {characters.map((item, index) => (
-        <CharacterBox
-          key={item.id}
-          character={item.char}
-          status={item.status}
-          isActive={index === currentIndex}
-        />
-      ))}
-    </div>
-  );
-};
-
-const CharacterBox = ({
-  character,
-  status,
-  isActive,
-}: {
-  character: string;
-  status: "pending" | "correct" | "wrong";
-  isActive: boolean;
-}) => {
-  const getBackgroundColor = () => {
-    if (status === "correct") return "bg-green-500";
-    if (status === "wrong") return "bg-red-500";
-    return "bg-gray-700";
-  };
-
-  const getAnimation = () => {
-    if (status === "correct") return "animate-pulse";
-    if (status === "wrong") return "animate-bounce";
-    return "";
-  };
-
-  return (
-    <div
-      className={`${getBackgroundColor()} w-12 h-12 rounded flex items-center justify-center text-2xl transition-all duration-300 ${getAnimation()} ${
-        isActive ? "ring-2 ring-blue-400" : ""
-      }`}
-    >
-      {character}
-    </div>
-  );
-};
-
-const CharacterInput = ({
-  onKeyPress,
-  inputRef,
-}: {
-  onKeyPress: (key: string) => void;
-  inputRef: React.RefObject<HTMLInputElement | null>;
-}) => {
-  const [value, setValue] = useState("");
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    if (newValue.length > value.length) {
-      const newChar = newValue[newValue.length - 1];
-      onKeyPress(newChar);
-    }
-    setValue(newValue);
-  };
-
-  return (
-    <input
-      ref={inputRef}
-      type="text"
-      className="opacity-0 w-0 h-0"
-      value={value}
-      onChange={handleChange}
-      placeholder="Type the characters..."
-      autoFocus
-    />
   );
 };
 
