@@ -54,7 +54,13 @@ app.use(require('./middleware/errorHandler'));
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Strežnik teče na http://localhost:${PORT}`);
-  console.log(`Okolje: ${process.env.NODE_ENV}`);
-});
+// Only start the HTTP server when this file is run directly.
+// This allows test suites to import the app without starting a listener.
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Strežnik teče na http://localhost:${PORT}`);
+    console.log(`Okolje: ${process.env.NODE_ENV}`);
+  });
+}
+
+module.exports = app;
