@@ -1,5 +1,6 @@
 const UserProgress = require('../models/UserProgress');
 const Lesson = require('../models/Lesson');
+const Achievement = require('../models/Achievement');
 
 /**
  * Pridobi napredek uporabnika
@@ -7,15 +8,15 @@ const Lesson = require('../models/Lesson');
  * @returns {Promise<Object>} Uporabniški napredek
  */
 const getUserProgress = async (userId) => {
-  let progress = await UserProgress.findOne({ userId })
+  let progress = await UserProgress.findOne({ user: userId })
     .populate('completedLessons.lessonId', 'title category difficulty points icon')
     .lean();
-  
+
   // Če uporabnik še nima napredka, ustvari nov zapis
   if (!progress) {
-    progress = await UserProgress.create({ userId });
+    progress = await UserProgress.create({ user: userId });
   }
-  
+
   return progress;
 };
 
@@ -26,7 +27,7 @@ const getUserProgress = async (userId) => {
  * @returns {Promise<Object>} Ustvarjen napredek
  */
 const createUserProgress = async (userId, nickname = 'Mladi raziskovalec') => {
-  const progress = await UserProgress.create({ userId, nickname });
+  const progress = await UserProgress.create({ user: userId, nickname });
   return progress;
 };
 
@@ -46,9 +47,9 @@ const saveLessonCompletion = async (userId, lessonId, score, timeSpent = 0) => {
   }
 
   // Pridobi ali ustvari napredek
-  let progress = await UserProgress.findOne({ userId });
+  let progress = await UserProgress.findOne({ user: userId });
   if (!progress) {
-    progress = new UserProgress({ userId });
+    progress = new UserProgress({ user: userId });
   }
 
   // Preveri, ali je lekcija že dokončana
@@ -96,12 +97,80 @@ const saveLessonCompletion = async (userId, lessonId, score, timeSpent = 0) => {
     progress.categoryStats[categoryKey].points += score;
   }
 
-  // Posodobi aktivnost
-  progress.lastActive = new Date();
-  progress.totalAttempts += 1;
+  // Posodobi aktivnost in streak - calculate based on previous lastActive
+  const now = new Date();
+  const lastActive = progress.lastActive ? new Date(progress.lastActive) : null;
+
+  if (!lastActive) {
+    // first activity
+    progress.currentStreak = 1;
+  } else {
+    const hoursDiff = (now - lastActive) / (1000 * 60 * 60);
+    if (hoursDiff < 24) {
+      // same day - no change
+    } else if (hoursDiff < 48) {
+      // next consecutive day
+      progress.currentStreak = (progress.currentStreak || 0) + 1;
+    } else {
+      // streak broken
+      progress.currentStreak = 1;
+    }
+  }
+
+  if (!progress.longestStreak || progress.currentStreak > progress.longestStreak) {
+    progress.longestStreak = progress.currentStreak;
+  }
+
+  progress.lastActive = now;
+  progress.totalAttempts = (progress.totalAttempts || 0) + 1;
+
+  // Check achievements after updating progress values
+  try {
+    const achievements = await Achievement.find().lean();
+    for (const ach of achievements) {
+      const already = progress.achievements && progress.achievements.some(a => a.achievement && a.achievement.toString() === ach._id.toString());
+      if (already) continue;
+
+      const cond = ach.condition || {};
+      let award = false;
+
+      switch (cond.type) {
+        case 'points':
+          award = (progress.totalPoints >= (cond.value || 0));
+          break;
+        case 'lessons':
+          award = (progress.completedLessons && progress.completedLessons.length >= (cond.value || 0));
+          break;
+        case 'streak':
+          award = ((progress.currentStreak || 0) >= (cond.value || 0));
+          break;
+        case 'category':
+          // require condition.category to be present
+          if (cond.category) {
+            const stats = progress.categoryStats && progress.categoryStats[cond.category];
+            award = (stats && stats.completed >= (cond.value || 0));
+          }
+          break;
+        default:
+          break;
+      }
+
+      if (award) {
+        progress.achievements = progress.achievements || [];
+        progress.achievements.push({
+          achievement: ach._id,
+          earnedAt: new Date(),
+          shown: false
+        });
+      }
+    }
+  } catch (err) {
+    // Do not fail the whole flow if achievements lookup fails
+    console.warn('Error checking achievements:', err.message || err);
+  }
 
   await progress.save();
-  
+
   return progress;
 };
 
@@ -112,7 +181,7 @@ const saveLessonCompletion = async (userId, lessonId, score, timeSpent = 0) => {
  * @returns {Promise<Boolean>} True če je dokončana
  */
 const isLessonCompleted = async (userId, lessonId) => {
-  const progress = await UserProgress.findOne({ userId }).lean();
+  const progress = await UserProgress.findOne({ user: userId }).lean();
   
   if (!progress) return false;
   
@@ -128,7 +197,7 @@ const isLessonCompleted = async (userId, lessonId) => {
  * @returns {Promise<Number|null>} Rezultat ali null
  */
 const getLessonScore = async (userId, lessonId) => {
-  const progress = await UserProgress.findOne({ userId }).lean();
+  const progress = await UserProgress.findOne({ user: userId }).lean();
   
   if (!progress) return null;
   
@@ -146,26 +215,29 @@ const getLessonScore = async (userId, lessonId) => {
  * @returns {Promise<Object>} Posodobljen napredek
  */
 const addAchievement = async (userId, achievement) => {
-  const progress = await UserProgress.findOne({ userId });
-  
+  const progress = await UserProgress.findOne({ user: userId });
+
   if (!progress) {
     throw new Error('Uporabnik nima napredka');
   }
-  
-  // Preveri, ali dosežek že obstaja
-  const exists = progress.achievements.some(a => a.name === achievement.name);
-  
+
+  // Support passing either an achievement id or object
+  const achievementId = (typeof achievement === 'string' || achievement instanceof require('mongoose').Types.ObjectId)
+    ? achievement
+    : (achievement && achievement._id) ? achievement._id : null;
+
+  if (!achievementId) {
+    throw new Error('Invalid achievement identifier');
+  }
+
+  const exists = progress.achievements && progress.achievements.some(a => a.achievement && a.achievement.toString() === achievementId.toString());
+
   if (!exists) {
-    progress.achievements.push({
-      name: achievement.name,
-      description: achievement.description,
-      icon: achievement.icon || '🏆',
-      earnedAt: new Date()
-    });
-    
+    progress.achievements = progress.achievements || [];
+    progress.achievements.push({ achievement: achievementId, earnedAt: new Date(), shown: false });
     await progress.save();
   }
-  
+
   return progress;
 };
 
@@ -189,32 +261,33 @@ const getLeaderboard = async (limit = 10) => {
  * @param {String} userId - ID uporabnika
  * @returns {Promise<Object>} Posodobljen napredek
  */
+// Keep a helper for explicit streak updates if needed internally
 const updateStreak = async (userId) => {
-  const progress = await UserProgress.findOne({ userId });
+  const progress = await UserProgress.findOne({ user: userId });
   
   if (!progress) {
     throw new Error('Uporabnik nima napredka');
   }
-  
+
   const now = new Date();
-  const lastActive = new Date(progress.lastActive);
-  const hoursDiff = (now - lastActive) / (1000 * 60 * 60);
-  
-  if (hoursDiff < 24) {
-    // Isti dan - brez spremembe
-    return progress;
-  } else if (hoursDiff < 48) {
-    // Naslednji dan - povečaj streak
-    progress.currentStreak += 1;
-    
-    if (progress.currentStreak > progress.longestStreak) {
-      progress.longestStreak = progress.currentStreak;
-    }
-  } else {
-    // Prekinjen streak
+  const lastActive = progress.lastActive ? new Date(progress.lastActive) : null;
+  if (!lastActive) {
     progress.currentStreak = 1;
+  } else {
+    const hoursDiff = (now - lastActive) / (1000 * 60 * 60);
+    if (hoursDiff < 24) {
+      // same day - nothing
+    } else if (hoursDiff < 48) {
+      progress.currentStreak = (progress.currentStreak || 0) + 1;
+    } else {
+      progress.currentStreak = 1;
+    }
   }
-  
+
+  if (!progress.longestStreak || progress.currentStreak > progress.longestStreak) {
+    progress.longestStreak = progress.currentStreak;
+  }
+
   progress.lastActive = now;
   await progress.save();
   
@@ -227,7 +300,7 @@ const updateStreak = async (userId) => {
  * @returns {Promise<Boolean>} True če uspešno
  */
 const resetUserProgress = async (userId) => {
-  const result = await UserProgress.findOneAndDelete({ userId });
+  const result = await UserProgress.findOneAndDelete({ user: userId });
   return !!result;
 };
 
@@ -237,7 +310,7 @@ const resetUserProgress = async (userId) => {
  * @returns {Promise<Object>} Statistika
  */
 const getCategoryStats = async (userId) => {
-  const progress = await UserProgress.findOne({ userId })
+  const progress = await UserProgress.findOne({ user: userId })
     .select('categoryStats')
     .lean();
   
@@ -250,7 +323,7 @@ const getCategoryStats = async (userId) => {
  * @returns {Promise<Number>} Število dokončanih lekcij
  */
 const countCompletedLessons = async (userId) => {
-  const progress = await UserProgress.findOne({ userId })
+  const progress = await UserProgress.findOne({ user: userId })
     .select('completedLessons')
     .lean();
   
