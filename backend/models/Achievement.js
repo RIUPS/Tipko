@@ -24,6 +24,11 @@ const achievementSchema = new mongoose.Schema({
       type: Number,
       required: true
     }
+    ,
+    // Optional category key for 'category' condition
+    category: {
+      type: String
+    }
   },
   rarity: {
     type: String,

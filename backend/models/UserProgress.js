@@ -1,8 +1,9 @@
 const mongoose = require('mongoose');
 
 const userProgressSchema = new mongoose.Schema({
-  userId: {
-    type: String,
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
     required: true,
     unique: true
   },
@@ -34,17 +35,35 @@ const userProgressSchema = new mongoose.Schema({
     default: 0
   },
   achievements: [{
-    name: String,
+    achievement: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Achievement',
+      required: true
+    },
     earnedAt: {
       type: Date,
       default: Date.now
     },
-    icon: {
-      type: String,
-      default: '🏆'
+    // Whether the client has shown this achievement notification to the user
+    shown: {
+      type: Boolean,
+      default: false
     }
   }],
+  // Map of category stats: { <category>: { completed: Number, points: Number } }
+  categoryStats: {
+    type: Object,
+    default: {}
+  },
+  totalAttempts: {
+    type: Number,
+    default: 0
+  },
   currentStreak: {
+    type: Number,
+    default: 0
+  },
+  longestStreak: {
     type: Number,
     default: 0
   },
@@ -55,8 +74,5 @@ const userProgressSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
-
-userProgressSchema.index({ userId: 1 });
-userProgressSchema.index({ totalPoints: -1 });
 
 module.exports = mongoose.model('UserProgress', userProgressSchema);
