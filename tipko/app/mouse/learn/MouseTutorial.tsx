@@ -67,6 +67,7 @@ const MouseTutorial: React.FC = () => {
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
+    if (!steps[step]) return;
 
     video.currentTime = steps[step].videoStart;
     video.play();
@@ -83,32 +84,18 @@ const MouseTutorial: React.FC = () => {
     };
   }, [step]);
 
-  if (step >= steps.length) {
-    return (
-      <div
-        style={{
-          padding: 40,
-          textAlign: "center",
-          background: "linear-gradient(135deg, #e0e7ff 0%, #f9fafb 100%)",
-          borderRadius: 16,
-          boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
-          margin: "40px auto",
-          maxWidth: 420,
-        }}
-      >
-        <h2 style={{ color: "#2563eb", marginBottom: 12 }}>Čestitamo!</h2>
-        <p style={{ color: "#374151", fontSize: 18 }}>
-          Uspešno ste opravili vse osnovne akcije z miško.
-        </p>
-      </div>
-    );
-  }
+  const tutorialCompleted = step >= steps.length;
 
   return (
     <div
       ref={boxRef}
       tabIndex={0}
       style={{
+        position: "relative",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
         border: "2px solid #2563eb",
         borderRadius: 16,
         padding: 48,
@@ -121,6 +108,7 @@ const MouseTutorial: React.FC = () => {
         boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
         maxWidth: 420,
         transition: "box-shadow 0.2s",
+        overflow: "hidden",
       }}
       onClick={handleMouse}
       onContextMenu={handleContextMenu}
@@ -129,7 +117,7 @@ const MouseTutorial: React.FC = () => {
     >
       <video
         ref={videoRef}
-        src="assets/mouse/mouse_tutorial.mp4"
+        src="/assets/mouse/mouse_tutorial.mp4"
         width={220}
         muted
         loop={false}
@@ -148,7 +136,7 @@ const MouseTutorial: React.FC = () => {
           fontSize: 24,
         }}
       >
-        {steps[step].instruction}
+        {steps[step]?.instruction}
       </div>
       <div
         style={{
@@ -162,6 +150,51 @@ const MouseTutorial: React.FC = () => {
       >
         (Kliknite ali zavrtite miško znotraj tega okvirja)
       </div>
+
+      {tutorialCompleted && (
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            width: "100%",
+            height: "100%",
+            background: "rgba(30,30,60,0.55)",
+            borderRadius: 16,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 10,
+          }}
+        >
+          <h2 style={{ color: "#fff", marginBottom: 16, fontSize: 28, textShadow: "0 2px 8px #0004" }}>
+            Čestitamo!
+          </h2>
+          <p style={{ color: "#e0e7ff", fontSize: 18, marginBottom: 32, textShadow: "0 2px 8px #0003" }}>
+            Uspešno ste opravili vse osnovne akcije z miško.
+          </p>
+          <a
+            href="/mouse/challenge"
+            style={{
+              padding: "18px 44px",
+              fontSize: 22,
+              fontWeight: 700,
+              background: "linear-gradient(90deg, #f472b6, #60a5fa)",
+              color: "#fff",
+              border: "none",
+              borderRadius: 32,
+              boxShadow: "0 2px 12px rgba(30,30,60,0.15)",
+              textDecoration: "none",
+              cursor: "pointer",
+              transition: "background 0.2s",
+              letterSpacing: 1,
+            }}
+          >
+            Pojdi na izziv
+          </a>
+        </div>
+      )}
     </div>
   );
 };
