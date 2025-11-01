@@ -7,7 +7,7 @@ export default function KeyboardHome() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-yellow-100 via-pink-50 to-blue-100 py-8">
       <main className="flex flex-col items-center gap-8 w-full max-w-2xl bg-white/80 rounded-3xl shadow-xl px-6 py-10 border-4 border-pink-200">
         <Image
-          src="/assets/kids/kid-typing.png"
+          src="/assets/kids/kid-using-computer.png"
           alt="Otrok uporablja tipkovnico"
           width={250}
           height={180}
