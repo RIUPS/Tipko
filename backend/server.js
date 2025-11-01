@@ -1,10 +1,11 @@
 const express = require('express');
 const dotenv = require('dotenv');
+const path = require('path');
 const cors = require('cors');
 const connectDB = require('./config/db');
 
-// Naloži environment variables
-dotenv.config();
+// Naloži environment variables from backend/.env (works even when cwd is repository root)
+dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 // Poveži z MongoDB
 connectDB();
@@ -22,24 +23,34 @@ app.get('/', (req, res) => {
     message: '🎮 Otroški računalnik API',
     status: 'Deluje!',
     endpoints: {
-      lessons: '/not_implemented',
-      progress: '/not_implemented/'
+      lessons: '/api/lessons',
+      progress: '/api/progress'
     }
   });
 });
 
 // API Routes
+// Mount API routers
+app.use('/api/lessons', require('./routes/lessonRoutes'));
+app.use('/api/progress', require('./routes/progressRoutes'));
+app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api/auth', require('./routes/authRoutes'));
+// Achievements endpoints
+app.use('/api/achievements', require('./routes/achievementRoutes'));
 
+// Swagger
+try {
+  const swaggerUi = require('swagger-ui-express');
+  const swaggerJsdoc = require('swagger-jsdoc');
+  const swaggerOptions = require('./swagger/swaggerOptions');
+  const swaggerSpec = swaggerJsdoc(swaggerOptions);
+  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+} catch (err) {
+  console.warn('Swagger not available (missing packages). Install swagger-ui-express and swagger-jsdoc to enable API docs.');
+}
 
-// Error Handler
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(err.status || 500).json({
-    success: false,
-    message: err.message || 'Napaka strežnika',
-    error: process.env.NODE_ENV === 'development' ? err : {}
-  });
-});
+// Centralized error handler (uses middleware/errorHandler.js)
+app.use(require('./middleware/errorHandler'));
 
 const PORT = process.env.PORT || 5000;
 
