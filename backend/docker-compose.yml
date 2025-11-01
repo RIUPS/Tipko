@@ -1,15 +1,22 @@
-version: '3.8'
 services:
-  mongo:
-    image: mongo:6.0
-    container_name: tipko-mongo
-    restart: unless-stopped
-    ports:
-      - "27017:27017"
+  postgres:
+    image: ghcr.io/ferretdb/postgres-documentdb:17-0.106.0-ferretdb-2.5.0
+    restart: on-failure
     environment:
-      MONGO_INITDB_DATABASE: tipko
+      - POSTGRES_USER=tipko
+      - POSTGRES_PASSWORD=tipkopass
+      - POSTGRES_DB=postgres
     volumes:
-      - mongo_data:/data/db
+      - ./data:/var/lib/postgresql/data
+
+  ferretdb:
+    image: ghcr.io/ferretdb/ferretdb:2.5.0
+    restart: on-failure
+    depends_on:
+      - postgres
+    environment:
+      - FERRETDB_AUTH=false
+      - FERRETDB_POSTGRESQL_URL=postgres://tipko:tipkopass@postgres:5432/postgres
 
   backend:
     build:
@@ -18,22 +25,19 @@ services:
     container_name: tipko-backend
     restart: unless-stopped
     depends_on:
-      - mongo
+      - ferretdb
     ports:
       - "5000:5000"
     environment:
       NODE_ENV: production
       PORT: 5000
-      MONGO_URI: "mongodb://mongo:27017/tipko"
+      MONGO_URI: "mongodb://ferretdb:27017/tipko"
       JWT_SECRET: "change_this_in_prod"
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:5000/ || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
-    volumes:
-      - ./:/usr/src/app:ro
 
 volumes:
-  mongo_data:
-    name: tipko_mongo_data
+  postgres_data:
