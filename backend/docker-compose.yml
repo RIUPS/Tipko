@@ -32,7 +32,7 @@ services:
       NODE_ENV: production
       PORT: 5000
       MONGO_URI: "mongodb://ferretdb:27017/tipko"
-      JWT_SECRET: "change_this_in_prod"
+      JWT_SECRET: "${JWT_SECRET}"
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:5000/ || exit 1"]
       interval: 10s
