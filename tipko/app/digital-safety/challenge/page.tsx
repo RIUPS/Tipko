@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const questions = [
   {
@@ -105,20 +105,88 @@ export default function DigitalSafetyQuiz() {
   const [score, setScore] = useState(0);
   const [showResult, setShowResult] = useState(false);
   const [selected, setSelected] = useState<number | null>(null);
+  const [saved, setSaved] = useState<null | "success" | "error" | "not-improved">(null);
+  const [user, setUser] = useState<string>("");
+  const [previousScore, setPreviousScore] = useState<number | null>(null);
+
+  // Pridobi ali ustvari fingerprint in prejšnji rezultat
+  useEffect(() => {
+    let fingerprint = localStorage.getItem("fingerprint");
+    if (!fingerprint) {
+      fingerprint = Math.random().toString(36).substring(2) + Date.now();
+      localStorage.setItem("fingerprint", fingerprint);
+    }
+    setUser(fingerprint);
+
+    // Pridobi prejšnji rezultat iz baze
+    fetch(`http://localhost:5000/api/web-safety/results?user=${fingerprint}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setPreviousScore(data[0].score);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Shrani ali posodobi rezultat samo če je boljši
+  async function saveResult() {
+    try {
+      // Pridobi prejšnji rezultat še enkrat za vsak slučaj (če je vmes kdo rešil še enkrat)
+      const resPrev = await fetch(
+        `http://localhost:5000/api/web-safety/results?user=${user}`
+      );
+      const prevData = await resPrev.json();
+      const prevScore = Array.isArray(prevData) && prevData.length > 0 ? prevData[0].score : null;
+
+      if (prevScore === null || score > prevScore) {
+        // Če ni prejšnjega ali je rezultat boljši, pošlji PATCH (ali POST če prvič)
+        const method = prevScore === null ? "POST" : "PATCH";
+        const url =
+          prevScore === null
+            ? "http://localhost:5000/api/web-safety/results"
+            : `http://localhost:5000/api/web-safety/results/${user}`;
+        const res = await fetch(url, {
+          method,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user,
+            score,
+            totalQuestions: questions.length,
+            date: new Date(),
+          }),
+        });
+        if (res.ok) setSaved("success");
+        else setSaved("error");
+      } else {
+        setSaved("not-improved");
+      }
+    } catch {
+      setSaved("error");
+    }
+  }
 
   function handleAnswer(idx: number) {
     setSelected(idx);
     setTimeout(() => {
       if (idx === questions[current].answer) {
-        setScore(score + 1);
+        setScore((prev) => prev + 1);
       }
       setSelected(null);
       if (current + 1 < questions.length) {
-        setCurrent(current + 1);
+        setCurrent((prev) => prev + 1);
       } else {
         setShowResult(true);
+        saveResult();
       }
     }, 800);
+  }
+
+  function handleRestart() {
+    setCurrent(0);
+    setScore(0);
+    setShowResult(false);
+    setSaved(null);
   }
 
   return (
@@ -126,6 +194,11 @@ export default function DigitalSafetyQuiz() {
       <h1 className="text-3xl sm:text-4xl font-extrabold text-blue-700 mb-8 text-center">
         Kviz iz spletne varnsoti
       </h1>
+      {previousScore !== null && !showResult && (
+        <div className="mb-6 text-blue-800 font-semibold text-center">
+          Tvoj najboljši rezultat do sedaj: {previousScore} / {questions.length}
+        </div>
+      )}
       {!showResult ? (
         <div className="bg-white/95 rounded-3xl shadow-xl px-6 py-10 border-4 border-blue-200 flex flex-col items-center">
           <div className="text-lg font-bold text-blue-900 mb-6 text-center">
@@ -171,12 +244,23 @@ export default function DigitalSafetyQuiz() {
               ? "Dobro! Še malo vaje in boš pravi mojster."
               : "Poskusi še enkrat in se nauči še več o varnosti na spletu!"}
           </p>
+          {saved === "success" && (
+            <div className="mb-4 text-green-700 font-semibold">
+              Rezultat je bil uspešno shranjen!
+            </div>
+          )}
+          {saved === "not-improved" && (
+            <div className="mb-4 text-yellow-700 font-semibold">
+              Rezultat ni bil shranjen, ker ni boljši od tvojega najboljšega!
+            </div>
+          )}
+          {saved === "error" && (
+            <div className="mb-4 text-red-700 font-semibold">
+              Napaka pri shranjevanju rezultata.
+            </div>
+          )}
           <button
-            onClick={() => {
-              setCurrent(0);
-              setScore(0);
-              setShowResult(false);
-            }}
+            onClick={handleRestart}
             className="bg-pink-500 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:bg-pink-600 transition"
           >
             Reši še enkrat
