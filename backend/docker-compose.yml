@@ -27,7 +27,7 @@ services:
     depends_on:
       - ferretdb
     ports:
-      - "5000:5000"
+      - "5186:5000"
     environment:
       NODE_ENV: production
       PORT: 5000
