@@ -4,30 +4,27 @@ export async function POST(request: Request) {
   try {
     const { fingerprint } = await request.json();
 
-    // TODO: Find user and generate JWT
-    // const user = await db.user.findUnique({ where: { fingerprint } });
-    // if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    // const jwt = generateJWT(user);
-
-    // Placeholder response
-    const user = {
-      id: "user_" + Math.random().toString(36).substr(2, 9),
-      fingerprint,
-      jwt: "jwt_token_placeholder",
-    };
-
-    // Set HTTP-only cookie
-    const response = NextResponse.json(user);
-    response.cookies.set("jwt", user.jwt, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-      path: "/",
+    const res = await fetch(`http://localhost:5000/api/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ fingerprint }),
     });
 
-    return response;
+    if (!res.ok) {
+      const errorData = await res.json();
+      return NextResponse.json(
+        { error: errorData.message || "Registracija neuspešna" },
+        { status: res.status }
+      );
+    }
+    const data = await res.json();
+    return NextResponse.json(data);
   } catch (error) {
-    return NextResponse.json({ error: "Login failed" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Registracija neuspešna" },
+      { status: 500 }
+    );
   }
 }

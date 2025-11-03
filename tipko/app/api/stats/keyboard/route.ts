@@ -1,7 +1,7 @@
+import { useAuth } from "@/context/AuthContext";
 import { NextResponse } from "next/server";
 
 interface Payload {
-  userId: string;
   wpm: number;
   accuracy: number;
   time: number;
@@ -14,20 +14,31 @@ interface Payload {
 export async function POST(request: Request) {
   try {
     const { payload }: { payload: Payload } = await request.json();
+    const { user } = useAuth();
 
-    // TODO: Find user and generate JWT
-    // const user = await db.user.findUnique({ where: { fingerprint } });
-    // if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    // const jwt = generateJWT(user);
+    console.log("keyboard route:", payload, user);
 
-    // Placeholder response
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    // Set HTTP-only cookie
-    const response = NextResponse.json({
-      message: "Stats recorded successfully",
+    const res = await fetch(`http://localhost:5000/api/stats/keyboard`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ ...payload, userId: user.id }),
     });
 
-    return response;
+    if (!res.ok) {
+      const errorData = await res.json();
+      return NextResponse.json(
+        { error: errorData.message || "Login failed" },
+        { status: res.status }
+      );
+    }
+    const data = await res.json();
+    return NextResponse.json(data);
   } catch (error) {
     return NextResponse.json({ error: "Login failed" }, { status: 500 });
   }
