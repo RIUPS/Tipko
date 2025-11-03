@@ -6,7 +6,11 @@ module.exports = {
       version: '1.0.0',
       description: 'API za lekcije, napredek in dosežke'
     },
-    servers: [ { url: 'http://localhost:5000/api' } ],
+    servers: [ 
+      { url: '/api', description: 'Current server' },
+      { url: 'http://localhost:5186/api', description: 'Local server (container)' },
+      { url: 'http://localhost:5000/api', description: 'Local server (development)' }
+    ],
     tags: [
       { name: 'Lessons', description: 'Operations for lessons and lesson management' },
       { name: 'Progress', description: 'User progress, achievements and leaderboard' },
