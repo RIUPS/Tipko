@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@/context/AuthContext";
 import { ChartDataPoint, ErrorType, QuoteLengthType } from "@/types";
 import React, { useState, useEffect, useRef } from "react";
 import {
@@ -12,6 +13,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import type { User } from "@/types";
 
 const QUOTES: Record<QuoteLengthType, string[]> = {
   short: [
@@ -35,6 +37,8 @@ const QUOTES: Record<QuoteLengthType, string[]> = {
 };
 
 export default function Page() {
+  const { user } = useAuth();
+
   const [quoteLength, setQuoteLength] = useState<QuoteLengthType>("medium");
   const [stopOnError, setStopOnError] = useState(false);
   const [currentQuote, setCurrentQuote] = useState("");
@@ -44,6 +48,7 @@ export default function Page() {
   const [errors, setErrors] = useState<ErrorType[]>([]);
   const [isComplete, setIsComplete] = useState(false);
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -90,6 +95,13 @@ export default function Page() {
     );
 
     return { wpm, cpm, accuracy, timeInSeconds: timeInSeconds.toFixed(2) };
+  };
+
+  const calculatePoints = (wpm: number, accuracy: number, time: number) => {
+    // A simple balanced scoring formula — you can adjust weights as desired
+    const base = wpm * (accuracy / 100);
+    const timeBonus = Math.max(0, 100 - time / 2);
+    return Math.round(base + timeBonus);
   };
 
   const updateChartData = (currentInput: string) => {
@@ -144,11 +156,64 @@ export default function Page() {
       updateChartData(input);
 
     if (input.length === currentQuote.length && input === currentQuote) {
-      setEndTime(Date.now());
+      const end = Date.now();
+      setEndTime(end);
       setIsComplete(true);
       updateChartData(input);
     }
   };
+
+  // Save results when typing test completes
+  useEffect(() => {
+    const saveResults = async () => {
+      if (!isComplete) return;
+      const stats = calculateStats();
+      if (!stats) return;
+
+      if (!user || !user.jwt) {
+        console.log("User not logged in — skipping save");
+        return;
+      }
+
+      const { wpm, accuracy, timeInSeconds } = stats;
+      const points = calculatePoints(wpm, accuracy, parseFloat(timeInSeconds));
+
+      const payload = {
+        userId: user.id,
+        wpm,
+        accuracy,
+        time: parseFloat(timeInSeconds),
+        points,
+        errors: errors.length,
+        quoteLength,
+        timestamp: new Date().toISOString(),
+      };
+
+      try {
+        setIsSaving(true);
+        const res = await fetch("/api/stats/keyboard", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user.jwt}`,
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) throw new Error("Failed to save stats");
+
+        const data = await res.json();
+
+        alert(data.message);
+      } catch (err) {
+        console.error("Error saving keyboard stats:", err);
+      } finally {
+        setIsSaving(false);
+      }
+    };
+
+    saveResults();
+  }, [isComplete]);
 
   const getCharClass = (index: number) => {
     if (index >= userInput.length) return "text-gray-400";
@@ -242,8 +307,7 @@ export default function Page() {
               <h2 className="text-3xl font-bold text-center mb-6 text-yellow-600">
                 Rezultati
               </h2>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
                 <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
                   <div className="text-3xl font-bold text-green-600">
                     {stats.wpm}
@@ -274,8 +338,19 @@ export default function Page() {
                     Napake
                   </div>
                 </div>
+                <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 text-center">
+                  <div className="text-3xl font-bold text-purple-600">
+                    {calculatePoints(
+                      stats.wpm,
+                      stats.accuracy,
+                      parseFloat(stats.timeInSeconds)
+                    )}
+                  </div>
+                  <div className="text-sm text-purple-700 font-semibold">
+                    Točke
+                  </div>
+                </div>
               </div>
-
               {/* Chart */}
               <div className="bg-white border border-yellow-200 rounded-2xl p-4 mb-6">
                 <h3 className="text-xl font-bold mb-4 text-center text-yellow-700">
@@ -325,34 +400,14 @@ export default function Page() {
                   </LineChart>
                 </ResponsiveContainer>
               </div>
-
-              {/* Error Details */}
-              {errors.length > 0 && (
-                <div className="bg-pink-50 border border-pink-200 rounded-xl p-4 mb-6">
-                  <h3 className="text-xl font-bold mb-3 text-pink-600">
-                    Napake: {errors.length}
-                  </h3>
-                  <div className="max-h-32 overflow-y-auto text-sm space-y-1 text-pink-800">
-                    {errors.map((error, idx) => (
-                      <div key={idx}>
-                        Pozicija {error.index + 1}: pričakovano "
-                        <span className="font-bold text-green-600">
-                          {error.expected}
-                        </span>
-                        " – tipkano "
-                        <span className="font-bold text-pink-600">
-                          {error.typed}
-                        </span>
-                        "
-                      </div>
-                    ))}
-                  </div>
-                </div>
+              {isSaving && (
+                <p className="text-center text-sm text-yellow-600 font-semibold animate-pulse">
+                  💾 Shranjevanje rezultatov...
+                </p>
               )}
-
               <button
                 onClick={loadNewQuote}
-                className="w-full bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-bold py-3 px-6 rounded-full shadow-lg transition-transform hover:scale-105"
+                className="w-full bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-bold py-3 px-6 rounded-full shadow-lg transition-transform hover:scale-105 mt-6"
               >
                 🔄 Nov citat
               </button>

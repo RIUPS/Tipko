@@ -22,7 +22,8 @@ export default function MouseHome() {
         </h1>
 
         <p className="text-lg sm:text-xl text-blue-900 text-center font-semibold">
-          Spoznaj računalniško miško in preveri svoje spretnosti v zabavnem izzivu!
+          Spoznaj računalniško miško in preveri svoje spretnosti v zabavnem
+          izzivu!
         </p>
 
         <div className="flex flex-col sm:flex-row gap-6 w-full justify-center mt-4">
@@ -54,7 +55,8 @@ export default function MouseHome() {
         </div>
 
         <div className="bg-yellow-100 border-l-4 border-yellow-400 p-4 rounded-lg mt-6 text-yellow-800 font-semibold shadow">
-          💡 <strong>Nasvet:</strong> Vadba dela mojstra — vsak dan nekaj novih nalog!
+          💡 <strong>Nasvet:</strong> Vadba dela mojstra — vsak dan nekaj novih
+          nalog!
         </div>
 
         <div className="flex gap-6 mt-8 flex-col sm:flex-row w-full justify-center">
@@ -74,8 +76,6 @@ export default function MouseHome() {
           </a>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }

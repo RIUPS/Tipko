@@ -17,3 +17,18 @@ export interface ChartDataPoint {
   wpm: number;
   accuracy: number;
 }
+
+export interface User {
+  id: string;
+  fingerprint: string;
+  jwt: string;
+}
+
+export interface AuthContextType {
+  user: User | null;
+  isLoading: boolean;
+  isRegistered: boolean;
+  login: (fingerprint: string) => Promise<void>;
+  register: (fingerprint: string) => Promise<void>;
+  logout: () => Promise<void>;
+}

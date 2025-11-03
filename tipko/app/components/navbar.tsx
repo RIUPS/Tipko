@@ -1,7 +1,11 @@
+"use client";
 import React from "react";
 import { FaMouse, FaKeyboard, FaHome, FaShieldAlt } from "react-icons/fa";
+import { useAuth } from "@/context/AuthContext";
 
 const Navbar: React.FC = () => {
+  const { user, isRegistered, logout } = useAuth();
+
   return (
     <nav className="sticky top-0 z-50 bg-gradient-to-r from-blue-200 via-pink-200 to-yellow-200 shadow-lg py-3 px-6 rounded-b-3xl flex items-center justify-between">
       <div className="flex items-center gap-3">
@@ -34,12 +38,33 @@ const Navbar: React.FC = () => {
         <li>
           <a
             href="/digital-safety"
-            className="flex items-center gap-2 text-blue-600 font-semibold hover:bg-blue-100 px-4 py-2 rounded-xl transition"
+            className="flex items-center gap-2 text-green-600  font-semibold hover:bg-blue-100 px-4 py-2 rounded-xl transition"
           >
             <FaShieldAlt className="text-lg" />
             Spletna varnost
           </a>
         </li>
+        {isRegistered && user && (
+          <>
+            <li>
+              <a
+                href="/stats"
+                className="flex items-center gap-2 text-blue-600 font-semibold hover:bg-green-100 px-4 py-2 rounded-xl transition"
+              >
+                <FaShieldAlt className="text-lg" />
+                Statistika
+              </a>
+            </li>
+            <li>
+              <button
+                onClick={logout}
+                className="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded-xl transition"
+              >
+                Odjava
+              </button>
+            </li>
+          </>
+        )}
       </ul>
     </nav>
   );

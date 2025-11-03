@@ -5,13 +5,8 @@ import { useState } from "react";
 const questions = [
   {
     question: "Kaj je dober primer močnega gesla?",
-    options: [
-      "123456",
-      "ime123",
-      "Muca123!",
-      "geslo"
-    ],
-    answer: 2
+    options: ["123456", "ime123", "Muca123!", "geslo"],
+    answer: 2,
   },
   {
     question: "Kaj NIKOLI ne deliš na spletu?",
@@ -19,9 +14,9 @@ const questions = [
       "Najljubšo barvo",
       "Ime šole in naslov",
       "Najljubšo žival",
-      "Najljubšo risanko"
+      "Najljubšo risanko",
     ],
-    answer: 1
+    answer: 1,
   },
   {
     question: "Kaj narediš, če dobiš čudno sporočilo od neznanca?",
@@ -29,9 +24,9 @@ const questions = [
       "Odgovoriš in se predstaviš",
       "Pokažeš odraslemu",
       "Pošlješ svojo sliko",
-      "Ignoriraš in pozabiš"
+      "Ignoriraš in pozabiš",
     ],
-    answer: 1
+    answer: 1,
   },
   {
     question: "Kako prepoznaš varno spletno stran?",
@@ -39,9 +34,9 @@ const questions = [
       "Ima veliko reklam",
       "Začne se z http://",
       "Začne se z https://",
-      "Ima pisane slike"
+      "Ima pisane slike",
     ],
-    answer: 2
+    answer: 2,
   },
   {
     question: "Kaj narediš, preden preneseš novo igro?",
@@ -49,9 +44,9 @@ const questions = [
       "Takoj preneseš",
       "Vprašaš odraslega",
       "Klikneš na vse reklame",
-      "Preneseš iz neznane strani"
+      "Preneseš iz neznane strani",
     ],
-    answer: 1
+    answer: 1,
   },
   {
     question: "Kaj pomeni biti prijazen na spletu?",
@@ -59,9 +54,9 @@ const questions = [
       "Pišeš grde besede",
       "Pomagaš in pohvališ druge",
       "Se norčuješ iz drugih",
-      "Ignoriraš vse"
+      "Ignoriraš vse",
     ],
-    answer: 1
+    answer: 1,
   },
   {
     question: "Kaj narediš, ko končaš z uporabo računalnika v šoli?",
@@ -69,9 +64,9 @@ const questions = [
       "Pustiš vse odprto",
       "Odjaviš se iz računa",
       "Pobrišeš vse datoteke",
-      "Ugasneš monitor"
+      "Ugasneš monitor",
     ],
-    answer: 1
+    answer: 1,
   },
   {
     question: "Kaj narediš, če nisi prepričan, ali je nekaj na spletu res?",
@@ -79,9 +74,9 @@ const questions = [
       "Verjameš vsemu",
       "Vprašaš odraslega",
       "Deliš naprej",
-      "Ignoriraš"
+      "Ignoriraš",
     ],
-    answer: 1
+    answer: 1,
   },
   {
     question: "Kdo ti lahko pomaga nastaviti varnostne nastavitve?",
@@ -89,9 +84,9 @@ const questions = [
       "Prijatelj iz igre",
       "Neznanec na spletu",
       "Odrasla oseba (starši, učitelj)",
-      "Nihče"
+      "Nihče",
     ],
-    answer: 2
+    answer: 2,
   },
   {
     question: "Kaj je najbolj varen vzdevek za uporabo na spletu?",
@@ -99,10 +94,10 @@ const questions = [
       "Tvoje pravo ime in priimek",
       "SuperLevček",
       "Tvoj naslov",
-      "Tvoja telefonska številka"
+      "Tvoja telefonska številka",
     ],
-    answer: 1
-  }
+    answer: 1,
+  },
 ];
 
 export default function DigitalSafetyQuiz() {
@@ -164,7 +159,9 @@ export default function DigitalSafetyQuiz() {
         </div>
       ) : (
         <div className="bg-white/95 rounded-3xl shadow-xl px-6 py-10 border-4 border-blue-200 flex flex-col items-center">
-          <h2 className="text-2xl font-bold text-blue-800 mb-4">Tvoj rezultat: {score} / {questions.length}</h2>
+          <h2 className="text-2xl font-bold text-blue-800 mb-4">
+            Tvoj rezultat: {score} / {questions.length}
+          </h2>
           <p className="mb-6 text-blue-900 text-lg">
             {score === questions.length
               ? "Odlično! Pravi spletni varnostni mojster!"
