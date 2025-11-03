@@ -5,8 +5,8 @@ import React, {
   createContext,
   useContext,
   useState,
-  useEffect,
   ReactNode,
+  useEffect,
 } from "react";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -34,16 +34,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fingerprint }),
-        credentials: "include", // Important for cookies
+        credentials: "include",
       });
 
       if (response.ok) {
-        const data = await response.json();
+        const { data } = await response.json();
+
         setUser({
-          id: data.id,
-          fingerprint: data.fingerprint,
-          jwt: data.jwt,
+          id: data.user._id,
+          fingerprint: data.user.fingerprint,
+          jwt: data.token,
         });
+
         setIsRegistered(true);
       } else {
         throw new Error("Login failed");
@@ -63,20 +65,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         credentials: "include",
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setUser({
-          id: data.id,
-          fingerprint: data.fingerprint,
-          jwt: data.jwt,
-        });
-        setIsRegistered(true);
-      } else {
-        throw new Error("Registration failed");
-      }
-    } catch (error) {
-      console.error("Registration error:", error);
-      throw error;
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.error || "Registration failed");
+
+      // 🔑 whether logged in or newly registered
+      setUser({
+        id: data._id,
+        fingerprint: data.fingerprint,
+        jwt: data.jwt,
+      });
+      setIsRegistered(true);
+    } catch (err) {
+      console.error("Registration error:", err);
+      throw err;
     }
   };
 
@@ -94,30 +96,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        // Check if user has a valid session
-        const response = await fetch("/api/auth/session", {
-          credentials: "include",
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setUser({
-            id: data.id,
-            fingerprint: data.fingerprint,
-            jwt: data.jwt,
-          });
-          setIsRegistered(true);
-        }
-      } catch (error) {
-        console.error("Auth check error:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkAuth();
+    setIsLoading(false);
   }, []);
 
   return (
