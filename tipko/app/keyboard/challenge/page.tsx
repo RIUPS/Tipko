@@ -30,7 +30,7 @@ const QUOTES: Record<QuoteLengthType, string[]> = {
     "Največje zmage se rodijo iz največjih preizkušenj.",
   ],
   long: [
-    "Ni pomembno, kolikokrat padeš, ampak kolikokrat vstaneš. Življenje ni vedno lahko, a vsak padec te nauči nekaj novega o sebi in svetu okoli tebe.",
+    "Ni pomembno, kolikokrat padeš, ampak kolikrat vstaneš. Življenje ni vedno lahko, a vsak padec te nauči nekaj novega o sebi in svetu okoli tebe.",
     "Pravi pogum ni odsotnost strahu, temveč odločitev, da kljub strahu nadaljuješ naprej. Ko slediš srcu, te pot vedno pripelje tja, kjer moraš biti.",
     "Sreča ni cilj, ampak način življenja. Najdeš jo v drobnih trenutkih, v toplih nasmehih in v hvaležnosti za to, kar že imaš.",
   ],
@@ -38,6 +38,19 @@ const QUOTES: Record<QuoteLengthType, string[]> = {
 
 export default function Page() {
   const { user } = useAuth();
+
+  // --- Fingerprint logic ---
+  const [fingerprint, setFingerprint] = useState<string>("");
+
+  useEffect(() => {
+    let fp = localStorage.getItem("fingerprint");
+    if (!fp) {
+      fp = Math.random().toString(36).substring(2) + Date.now();
+      localStorage.setItem("fingerprint", fp);
+    }
+    setFingerprint(fp);
+  }, []);
+  // --- End fingerprint logic ---
 
   const [quoteLength, setQuoteLength] = useState<QuoteLengthType>("medium");
   const [stopOnError, setStopOnError] = useState(false);
@@ -170,17 +183,20 @@ export default function Page() {
       const stats = calculateStats();
       if (!stats) return;
 
-      if (!user || !user.jwt) {
-        console.log("User not logged in — skipping save");
+      if (!fingerprint) {
+        console.log("No fingerprint — skipping save");
         return;
       }
 
-      const { wpm, accuracy, timeInSeconds } = stats;
+      const { wpm, cpm, accuracy, timeInSeconds } = stats;
       const points = calculatePoints(wpm, accuracy, parseFloat(timeInSeconds));
 
+      // Universal challenge payload
       const payload = {
-        userId: user.id,
+        fingerprint,
+        type: "keyboard",
         wpm,
+        cpm,
         accuracy,
         time: parseFloat(timeInSeconds),
         points,
@@ -191,22 +207,27 @@ export default function Page() {
 
       try {
         setIsSaving(true);
-        const res = await fetch("/api/stats/keyboard", {
+        // Universal challenge endpoint
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+        if (user && user.jwt) {
+          headers["Authorization"] = `Bearer ${user.jwt}`;
+        }
+
+        const res = await fetch("http://localhost:5000/api/universal-challenges", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${user.jwt}`,
-          },
+          headers,
           body: JSON.stringify(payload),
         });
 
-        if (!res.ok) throw new Error("Failed to save stats");
+        if (!res.ok) throw new Error("Failed to save challenge");
 
         const data = await res.json();
 
         alert(data.message);
       } catch (err) {
-        console.error("Error saving keyboard stats:", err);
+        console.error("Error saving challenge:", err);
       } finally {
         setIsSaving(false);
       }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 const SHEEP_COUNT = 10;
@@ -39,6 +39,7 @@ export default function ClickSheeps({ onFinish }: { onFinish?: () => void }) {
   const [time, setTime] = useState(0);
   const [finished, setFinished] = useState(false);
   const [started, setStarted] = useState(false);
+  const [fingerprint, setFingerprint] = useState<string>("");
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Začetek igre
@@ -73,6 +74,36 @@ export default function ClickSheeps({ onFinish }: { onFinish?: () => void }) {
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [started, finished]);
+
+  // --- Fingerprint logic ---
+  useEffect(() => {
+    let fp = localStorage.getItem("fingerprint");
+    if (!fp) {
+      fp = Math.random().toString(36).substring(2) + Date.now();
+      localStorage.setItem("fingerprint", fp);
+    }
+    setFingerprint(fp);
+  }, []);
+  // --- End fingerprint logic ---
+
+  // Save result to universal challenge API when finished
+  useEffect(() => {
+    if (finished && fingerprint) {
+      const payload = {
+        fingerprint,
+        type: "mouse",
+        clicks: SHEEP_COUNT,
+        mouseTime: time,
+        points: Math.max(0, 100 - time), // Example scoring
+        timestamp: new Date().toISOString(),
+      };
+      fetch("http://localhost:5000/api/universal-challenges", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }).catch(() => {});
+    }
+  }, [finished, fingerprint, time]);
 
   const handleClick = (i: number, e: React.MouseEvent) => {
     e.stopPropagation();

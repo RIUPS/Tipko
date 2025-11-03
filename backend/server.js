@@ -39,7 +39,8 @@ app.use(
   "/api/keyboard-challenges",
   require("./routes/keyboardChallengeRoutes")
 );
-app.use("/api/web-safety", require("./routes/Web-SafetyRoutes"));
+//app.use("/api/web-safety", require("./routes/Web-SafetyRoutes"));
+app.use("/api/universal-challenges", require("./routes/universalChallengeRoutes"));
 // Achievements endpoints
 app.use("/api/achievements", require("./routes/achievementRoutes"));
 
