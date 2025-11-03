@@ -1,6 +1,6 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const authController = require('../controllers/authController');
+const authController = require("../controllers/authController");
 
 /**
  * @openapi
@@ -37,7 +37,7 @@ const authController = require('../controllers/authController');
  *                 data:
  *                   $ref: '#/components/schemas/AuthResponse'
  */
-router.post('/register', authController.register);
+router.post("/register", authController.register);
 
 /**
  * @openapi
@@ -74,6 +74,8 @@ router.post('/register', authController.register);
  *       401:
  *         description: Unauthorized
  */
-router.post('/login', authController.login);
+router.post("/login", authController.login);
+
+router.post("/check", authController.check);
 
 module.exports = router;
