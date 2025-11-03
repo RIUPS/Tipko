@@ -40,6 +40,7 @@ export default function DragSheeps() {
   const offset = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const [time, setTime] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [fingerprint, setFingerprint] = useState<string>("");
 
   // Timer
   useEffect(() => {
@@ -55,6 +56,36 @@ export default function DragSheeps() {
       if (timerRef.current) clearInterval(timerRef.current);
     }
   }, [sheepList]);
+
+  // --- Fingerprint logic ---
+  useEffect(() => {
+    let fp = localStorage.getItem("fingerprint");
+    if (!fp) {
+      fp = Math.random().toString(36).substring(2) + Date.now();
+      localStorage.setItem("fingerprint", fp);
+    }
+    setFingerprint(fp);
+  }, []);
+  // --- End fingerprint logic ---
+
+  // Save result to universal challenge API when all sheep are in pen
+  useEffect(() => {
+    if (sheepList.every(s => s.inPen) && fingerprint) {
+      const payload = {
+        fingerprint,
+        type: "mouse",
+        dragAccuracy: 100, // Example, you can calculate real accuracy if needed
+        mouseTime: time,
+        points: Math.max(0, 100 - time), // Example scoring
+        timestamp: new Date().toISOString(),
+      };
+      fetch("http://localhost:5000/api/universal-challenges", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }).catch(() => {});
+    }
+  }, [sheepList, fingerprint, time]);
 
   // Začetek vlečenja
   const handleMouseDown = (e: React.MouseEvent, id: number) => {

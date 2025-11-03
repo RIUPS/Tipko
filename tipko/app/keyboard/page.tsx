@@ -1,6 +1,5 @@
 import { FaKeyboard, FaGamepad } from "react-icons/fa";
 import Image from "next/image";
-import Footer from "../components/footer";
 
 export default function KeyboardHome() {
   return (
@@ -73,8 +72,6 @@ export default function KeyboardHome() {
           </a>
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }

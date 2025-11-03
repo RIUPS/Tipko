@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "./components/navbar";
+import { AuthProvider } from "@/context/AuthContext";
+import FingerprintHandler from "./components/fingerprint-handler";
+import { generateFingerprint } from "@/lib/fingerprint";
+import Footer from "./components/footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,8 +32,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-gradient-to-br from-blue-300 via-pink-200 to-yellow-300`}
       >
-        <Navbar />
-        {children}
+        <AuthProvider>
+          <FingerprintHandler generateFingerprint={generateFingerprint} />
+          <Navbar />
+          {children}
+          <Footer />
+        </AuthProvider>
       </body>
     </html>
   );

@@ -1,17 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const questions = [
   {
     question: "Kaj je dober primer močnega gesla?",
-    options: [
-      "123456",
-      "ime123",
-      "Muca123!",
-      "geslo"
-    ],
-    answer: 2
+    options: ["123456", "ime123", "Muca123!", "geslo"],
+    answer: 2,
   },
   {
     question: "Kaj NIKOLI ne deliš na spletu?",
@@ -19,9 +14,9 @@ const questions = [
       "Najljubšo barvo",
       "Ime šole in naslov",
       "Najljubšo žival",
-      "Najljubšo risanko"
+      "Najljubšo risanko",
     ],
-    answer: 1
+    answer: 1,
   },
   {
     question: "Kaj narediš, če dobiš čudno sporočilo od neznanca?",
@@ -29,9 +24,9 @@ const questions = [
       "Odgovoriš in se predstaviš",
       "Pokažeš odraslemu",
       "Pošlješ svojo sliko",
-      "Ignoriraš in pozabiš"
+      "Ignoriraš in pozabiš",
     ],
-    answer: 1
+    answer: 1,
   },
   {
     question: "Kako prepoznaš varno spletno stran?",
@@ -39,9 +34,9 @@ const questions = [
       "Ima veliko reklam",
       "Začne se z http://",
       "Začne se z https://",
-      "Ima pisane slike"
+      "Ima pisane slike",
     ],
-    answer: 2
+    answer: 2,
   },
   {
     question: "Kaj narediš, preden preneseš novo igro?",
@@ -49,9 +44,9 @@ const questions = [
       "Takoj preneseš",
       "Vprašaš odraslega",
       "Klikneš na vse reklame",
-      "Preneseš iz neznane strani"
+      "Preneseš iz neznane strani",
     ],
-    answer: 1
+    answer: 1,
   },
   {
     question: "Kaj pomeni biti prijazen na spletu?",
@@ -59,9 +54,9 @@ const questions = [
       "Pišeš grde besede",
       "Pomagaš in pohvališ druge",
       "Se norčuješ iz drugih",
-      "Ignoriraš vse"
+      "Ignoriraš vse",
     ],
-    answer: 1
+    answer: 1,
   },
   {
     question: "Kaj narediš, ko končaš z uporabo računalnika v šoli?",
@@ -69,9 +64,9 @@ const questions = [
       "Pustiš vse odprto",
       "Odjaviš se iz računa",
       "Pobrišeš vse datoteke",
-      "Ugasneš monitor"
+      "Ugasneš monitor",
     ],
-    answer: 1
+    answer: 1,
   },
   {
     question: "Kaj narediš, če nisi prepričan, ali je nekaj na spletu res?",
@@ -79,9 +74,9 @@ const questions = [
       "Verjameš vsemu",
       "Vprašaš odraslega",
       "Deliš naprej",
-      "Ignoriraš"
+      "Ignoriraš",
     ],
-    answer: 1
+    answer: 1,
   },
   {
     question: "Kdo ti lahko pomaga nastaviti varnostne nastavitve?",
@@ -89,9 +84,9 @@ const questions = [
       "Prijatelj iz igre",
       "Neznanec na spletu",
       "Odrasla oseba (starši, učitelj)",
-      "Nihče"
+      "Nihče",
     ],
-    answer: 2
+    answer: 2,
   },
   {
     question: "Kaj je najbolj varen vzdevek za uporabo na spletu?",
@@ -99,10 +94,10 @@ const questions = [
       "Tvoje pravo ime in priimek",
       "SuperLevček",
       "Tvoj naslov",
-      "Tvoja telefonska številka"
+      "Tvoja telefonska številka",
     ],
-    answer: 1
-  }
+    answer: 1,
+  },
 ];
 
 export default function DigitalSafetyQuiz() {
@@ -110,20 +105,66 @@ export default function DigitalSafetyQuiz() {
   const [score, setScore] = useState(0);
   const [showResult, setShowResult] = useState(false);
   const [selected, setSelected] = useState<number | null>(null);
+  const [saved, setSaved] = useState<null | "success" | "error">(null);
+  const [fingerprint, setFingerprint] = useState<string>("");
+
+  // Pridobi ali ustvari fingerprint
+  useEffect(() => {
+    let fp = localStorage.getItem("fingerprint");
+    if (!fp) {
+      fp = Math.random().toString(36).substring(2) + Date.now();
+      localStorage.setItem("fingerprint", fp);
+    }
+    setFingerprint(fp);
+  }, []);
+
+  // Shrani rezultat na univerzalni API
+  async function saveResult() {
+    try {
+      const payload = {
+        fingerprint,
+        type: "digital-safety",
+        score,
+        totalQuestions: questions.length,
+        points: score, // ali tvoja logika točkovanja
+        timestamp: new Date().toISOString(),
+      };
+      const res = await fetch(
+        "http://localhost:5000/api/universal-challenges",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+      if (res.ok) setSaved("success");
+      else setSaved("error");
+    } catch {
+      setSaved("error");
+    }
+  }
 
   function handleAnswer(idx: number) {
     setSelected(idx);
     setTimeout(() => {
       if (idx === questions[current].answer) {
-        setScore(score + 1);
+        setScore((prev) => prev + 1);
       }
       setSelected(null);
       if (current + 1 < questions.length) {
-        setCurrent(current + 1);
+        setCurrent((prev) => prev + 1);
       } else {
         setShowResult(true);
+        saveResult();
       }
     }, 800);
+  }
+
+  function handleRestart() {
+    setCurrent(0);
+    setScore(0);
+    setShowResult(false);
+    setSaved(null);
   }
 
   return (
@@ -164,7 +205,9 @@ export default function DigitalSafetyQuiz() {
         </div>
       ) : (
         <div className="bg-white/95 rounded-3xl shadow-xl px-6 py-10 border-4 border-blue-200 flex flex-col items-center">
-          <h2 className="text-2xl font-bold text-blue-800 mb-4">Tvoj rezultat: {score} / {questions.length}</h2>
+          <h2 className="text-2xl font-bold text-blue-800 mb-4">
+            Tvoj rezultat: {score} / {questions.length}
+          </h2>
           <p className="mb-6 text-blue-900 text-lg">
             {score === questions.length
               ? "Odlično! Pravi spletni varnostni mojster!"
@@ -174,12 +217,18 @@ export default function DigitalSafetyQuiz() {
               ? "Dobro! Še malo vaje in boš pravi mojster."
               : "Poskusi še enkrat in se nauči še več o varnosti na spletu!"}
           </p>
+          {saved === "success" && (
+            <div className="mb-4 text-green-700 font-semibold">
+              Rezultat je bil uspešno shranjen!
+            </div>
+          )}
+          {saved === "error" && (
+            <div className="mb-4 text-red-700 font-semibold">
+              Napaka pri shranjevanju rezultata.
+            </div>
+          )}
           <button
-            onClick={() => {
-              setCurrent(0);
-              setScore(0);
-              setShowResult(false);
-            }}
+            onClick={handleRestart}
             className="bg-pink-500 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:bg-pink-600 transition"
           >
             Reši še enkrat
