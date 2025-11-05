@@ -41,7 +41,7 @@ export default function DigitalSafetyHome() {
 
           {/* Gumb za kviz */}
           <a
-            href="/digital-safety/izziv"
+            href="/digital-safety/challenge"
             className="flex-1 flex flex-col items-center justify-center bg-pink-50 rounded-2xl p-6 shadow-lg border-2 border-pink-300 hover:scale-105 transition"
           >
             <FaQuestionCircle className="text-5xl text-pink-500 mb-3" />

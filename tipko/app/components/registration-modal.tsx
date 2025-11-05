@@ -79,6 +79,9 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({
           <FaShieldAlt className="text-yellow-500" />
           <span>
             Opomba: Brez registracije tvoj napredek ne bo shranjen trajno.
+            <div className="text-xs mt-1 font-normal text-yellow-900">
+              Z registracijo ne shranjujemo nobenih osebnih podatkov.
+            </div>
           </span>
         </div>
       </div>
