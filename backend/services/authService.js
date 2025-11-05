@@ -27,6 +27,14 @@ const login = async ({ fingerprint }) => {
   return { user, token };
 };
 
+const logout = async ({ fingerprint }) => {
+  const user = await User.deleteOne({ fingerprint });
+  if (user.deletedCount == 0) {
+    return false;
+  }
+  return true;
+};
+
 const check = async (fingerprint) => {
   const user = await User.findOne({ fingerprint });
   return !!user;
@@ -35,4 +43,4 @@ const check = async (fingerprint) => {
 const verifyToken = (token) =>
   jwt.verify(token, process.env.JWT_SECRET || "dev_jwt_secret");
 
-module.exports = { generateToken, register, login, verifyToken, check };
+module.exports = { generateToken, register, login, verifyToken, check, logout };

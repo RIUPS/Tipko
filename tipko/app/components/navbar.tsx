@@ -57,7 +57,7 @@ const Navbar: React.FC = () => {
             </li>
             <li>
               <button
-                onClick={logout}
+                onClick={() => logout(user.fingerprint)}
                 className="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded-xl transition"
               >
                 Odjava

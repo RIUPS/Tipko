@@ -82,11 +82,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const logout = async () => {
+  const logout = async (fingerprint: string) => {
+    console.log("logout auth context");
     try {
       await fetch("/api/auth/logout", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         credentials: "include",
+        body: JSON.stringify({ fingerprint }),
       });
       setUser(null);
       setIsRegistered(false);

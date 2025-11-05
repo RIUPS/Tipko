@@ -30,5 +30,5 @@ export interface AuthContextType {
   isRegistered: boolean;
   login: (fingerprint: string) => Promise<void>;
   register: (fingerprint: string) => Promise<void>;
-  logout: () => Promise<void>;
+  logout: (fingerprint: string) => Promise<void>;
 }
